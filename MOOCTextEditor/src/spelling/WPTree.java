@@ -20,29 +20,66 @@ public class WPTree implements WordPath {
 	// this is the root node of the WPTree
 	private WPTreeNode root;
 	// used to search for nearby Words
-	private NearbyWords nw; 
-	
-	// This constructor is used by the Text Editor Application
+	private NearbyWords nw;
+	// Dictionary
+    private Dictionary d;
+    // Threshold search value
+    private int searchLimit;
+
+    // This constructor is used by the Text Editor Application
 	// You'll need to create your own NearbyWords object here.
 	public WPTree () {
-		this.root = null;
-		// TODO initialize a NearbyWords object
-		// Dictionary d = new DictionaryHashSet();
-		// DictionaryLoader.loadDictionary(d, "data/dict.txt");
-		// this.nw = new NearbyWords(d);
+	    this.root = null;
+	    this.d = new DictionaryHashSet();
+	    DictionaryLoader.loadDictionary(this.d, "data/dict.txt");
+	    this.nw = new NearbyWords(this.d);
+	    this.searchLimit = this.d.size()/10;
 	}
 	
 	//This constructor will be used by the grader code
 	public WPTree (NearbyWords nw) {
 		this.root = null;
 		this.nw = nw;
+		this.d = nw.dict;
 	}
 	
 	// see method description in WordPath interface
 	public List<String> findPath(String word1, String word2) 
 	{
-	    // TODO: Implement this method.
-	    return new LinkedList<String>();
+        // confirm that word1 and word2 are valid words
+        if ((!d.isWord(word1))||(!d.isWord(word2))) {
+            System.out.println("One or both words not in dictionary.");
+            return null;
+        }
+
+        // initial variables
+        List<WPTreeNode> queue = new LinkedList<WPTreeNode>();     // String to explore
+        HashSet<String> visited = new HashSet<String>();   // to avoid exploring the same
+
+        // make first node
+        WPTreeNode currNode = new WPTreeNode(word1, null);
+        queue.add(currNode);
+        visited.add(word1);
+
+        // loop over queue while searching for word1
+        while ((!queue.isEmpty()) && (!currNode.getWord().equals(word2))) {
+//                && (visited.size()<searchLimit)) {
+//            printQueue(queue);
+            currNode = queue.remove(0);
+            for (String mutation : nw.distanceOne(currNode.getWord(), true)) {
+                if (!visited.contains(mutation)) {
+                    queue.add(currNode.addChild(mutation));
+                }
+            }
+            visited.add(currNode.getWord());
+        }
+
+        if (!currNode.getWord().equals(word2)) {
+            return null;
+        }
+        else {
+            return currNode.buildPathToRoot();
+        }
 	}
 	
 	// Method to print a list of WPTreeNodes (useful for debugging)
@@ -55,7 +92,15 @@ public class WPTree implements WordPath {
 		ret+= "]";
 		return ret;
 	}
-	
+
+	// Main testing method
+    public static void main(String[] args) {
+        WordPath wp = new WPTree();
+//        System.out.println(wp.findPath("time", "camels"));
+        System.out.println(wp.findPath("a", "atoms"));
+//        System.out.println(wp.findPath("a", "atomic"));
+    }
+
 }
 
 /* Tree Node in a WordPath Tree. This is a standard tree with each

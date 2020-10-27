@@ -109,7 +109,6 @@ public class AutoCompleteDictionaryTrie implements  Dictionary, AutoComplete {
      */@Override
      public List<String> predictCompletions(String prefix, int numCompletions) 
      {
-    	 // TODO: Implement this method
 		 prefix = prefix.toLowerCase();
 		 List<String> completions = new LinkedList<String>();
 
